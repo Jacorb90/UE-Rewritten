@@ -147,6 +147,7 @@ function unlockPhotons() {
 function getPhotonicMatterGainMult() {
     let mult = new Decimal(1);
     if (player.aq.unl) mult = mult.times(tmp.aq.gluon.eff);
+    if (hasDupEff(2)) mult = mult.times(tmp.dup.eff[2]);
     return mult;
 }
 
@@ -159,7 +160,7 @@ function getPhotonicMatterGain() {
 
 function photonLoop(diff) {
     player.photons.matter = player.photons.matter.plus(tmp.ph.gain.times(diff));
-    for (let i=0;i<photon_data.length;i++) if (photon_data[i].unl()) player.photons.colors[i].amt = player.photons.colors[i].amt.plus(tmp.ph.col[i].gain.times(diff));
+    for (let i=0;i<photon_data.length;i++) if (photon_data[i].unl()) player.photons.colors[i].amt = player.photons.colors[i].amt.plus(tmp.ph.col[i].gain.times(tmp.ph.phMul).times(diff));
 }
 
 function getPhotonGain(x) {
@@ -169,6 +170,12 @@ function getPhotonGain(x) {
     if (x<6 && hasAQUpg(24)) gain = gain.times(AQUpgEff(24));
     if (x<(hasAQUpg(44)?7:6) && hasAQUpg(43)) gain = gain.times(tmp.ph.uw[1]);
     return gain;
+}
+
+function getPhotonGainMult() {
+    let mult = new Decimal(1);
+    if (hasDupEff(2)) mult = mult.times(tmp.dup.eff[2]);
+    return mult;
 }
 
 function getPhotonGenCost(x) {
@@ -218,12 +225,17 @@ function getUltrawaveGainMult() {
     let mult = new Decimal(1);
     return mult;
 }
+function getUltrawaveCostDiv() {
+    let div = new Decimal(1);
+    if (hasDupEff(4)) div = div.times(tmp.dup.eff[4]);
+    return div;
+}
 function getUltrawaveGain() {
     if (!hasAQUpg(43)) return new Decimal(0);
     if (player.photons.matter.lt(Number.MAX_VALUE)) return new Decimal(0);
-    return player.photons.matter.div(Number.MAX_VALUE).log(1e7).plus(1).sqrt().times(getUltrawaveGainMult()).floor().sub(getTotalUltrawaves()).max(0)
+    return player.photons.matter.times(getUltrawaveCostDiv()).div(Number.MAX_VALUE).log(1e7).plus(1).sqrt().times(getUltrawaveGainMult()).floor().sub(getTotalUltrawaves()).max(0)
 }
-function getUltrawaveNext() { return Decimal.pow(1e7, getUltrawaveGain().plus(getTotalUltrawaves()).plus(1).div(getUltrawaveGainMult()).pow(2).sub(1)).times(Number.MAX_VALUE) }
+function getUltrawaveNext() { return Decimal.pow(1e7, getUltrawaveGain().plus(getTotalUltrawaves()).plus(1).div(getUltrawaveGainMult()).pow(2).sub(1)).times(Number.MAX_VALUE).div(getUltrawaveCostDiv()) }
 
 function ultrawaveReset(force=false) {
     if (!force) {
@@ -240,8 +252,14 @@ function ultrawaveReset(force=false) {
     annihilate(true);
 }
 
+function getWaveAccelPower() {
+    let power = new Decimal(1);
+    if (hasAQUpg(25)) power = power.times(AQUpgEff(25));
+    return power;
+}
+
 function getWaveAccelEff(x) {
-    let a = player.photons.uwi[x].times(AQUpgEff(43).plus(1).log10())
+    let a = player.photons.uwi[x].times(AQUpgEff(43).plus(1).log10()).times(tmp.ph.uwp);
     if (x==1) return Decimal.pow(20, a);
     else if (x==2) return a.plus(1).log10().plus(1).sqrt();
     else return a.div(20).plus(1);
@@ -250,6 +268,7 @@ function getWaveAccelEff(x) {
 function getPhotonColorPower(x) {
     let power = new Decimal(1);
     if (x<(hasAQUpg(44)?7:6) && hasAQUpg(43)) power = power.times(tmp.ph.uw[2]);
+    if (hasAQUpg(51)) power = power.times(AQUpgEff(51));
     return power;
 }
 

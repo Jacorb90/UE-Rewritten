@@ -150,6 +150,7 @@ const universe_upgs = {
 function divPrestigeReq() {
     let div = new Decimal(1);
     if (voidUpgActive(11)) div = div.times(tmp.anh.upgs[11].voidEff);
+    if (hasDupEff(4)) div = div.times(tmp.dup.eff[4]);
     return div;
 }
 function getPrestigeReqBase() {

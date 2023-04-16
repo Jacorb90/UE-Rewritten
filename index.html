@@ -17,6 +17,7 @@
     <script type="text/javascript" src="js/gameplay/void.js"></script>
     <script type="text/javascript" src="js/gameplay/photons.js"></script>
     <script type="text/javascript" src="js/gameplay/antiquarks.js"></script>
+    <script type="text/javascript" src="js/gameplay/duplicators.js"></script>
 </head>
 <body onload="loadGame()">
 	<div id="app">
@@ -95,6 +96,10 @@
                     You have <b class="invert green shadow">{{format(player.aq.green)}}</b> Anti-Green Quarks, which multiply Green Quark gain by <b class="green shadow">{{format(tmp.aq.eff.green)}}</b>, but divide Anti-Blue Quark gain by <b class="invert blue shadow">{{format(tmp.aq.eff.antigreen)}}</b>.<br><br>
                     You have <b class="invert blue shadow">{{format(player.aq.blue)}}</b> Anti-Blue Quarks, which multiply Blue Quark gain by <b class="blue shadow">{{format(tmp.aq.eff.blue)}}</b>, but divide Anti-Red Quark gain by <b class="invert red shadow">{{format(tmp.aq.eff.antiblue)}}</b>.<br><br><br>
                     The {{getAntiGluonScaleName()}}Anti-Gluon is <b class="invert gluon shadow">{{format(tmp.aq.gluon.size)}}m</b> long, which multiplies Photonic Matter{{hasAQUpg(21)?" & Anti-Energy":""}} gain by <b class="invert gluon shadow">{{format(tmp.aq.gluon.eff)}}x</b><br><br>
+                    <span v-if="hasAQUpg(52)">
+                        You have <b class="invert quarks shadow">{{formatWhole(player.aq.charge)}}</b> Antiquark Charge, which weakens all Antiquark effects by <b class="invert quarks shadow">{{format(Decimal.sub(1, Decimal.div(1, tmp.aq.chargeEff)).times(100))}}%</b>.<br><br>
+                        <button v-bind:class="{ invert: true, quarks: true, unlocked: tmp.aq.net.gte(tmp.aq.chargeCost), locked: tmp.aq.net.lt(tmp.aq.chargeCost) }" onclick="buyAQCharge()">Charge your Antiquarks.<br>Cost: <b class="invert quarksupg shadow">{{format(tmp.aq.chargeCost)}}</b> Total Antiquarks</button><br><br>
+                    </span>
                     Your Anti-Quarks have generated <b class="invert quarks shadow">{{format(player.aq.energy)}}</b> Anti-Energy (+{{format(getAQEnergyGain())}}/s)<br><br><br>
                     <b class="invert gluon shadow">Antiquark Upgrade Power: {{format(tmp.aq.upgs.power.times(100))}}%</b><br>
                     <table>
@@ -106,7 +111,7 @@
             </div>
             <div v-if="tabData.normal=='Hadrons'">
                 You have <b class="hadrons shadow">{{format(player.hadrons.amount)}}</b> Hadrons (+{{format(tmp.had.dispGain)}}/s), which are extending the starts of Universal Slowdown & Compaction by <b class="hadrons shadow">{{format(tmp.had.eff)}}x</b><br><br>
-                You have <b class="hadrons shadow">{{formatWhole(player.hadrons.boosters)+(tmp.had.extraBoosts.gt(0)?(" + "+format(tmp.had.extraBoosts)):"")}}</b> Hadronic Boosters, which are strengthening Quark & Gluon effects by <b class="gluon shadow">{{format(tmp.had.boostEff.sub(1).times(100))}}%</b>, and are multiplying Hadron gain by <b class="hadrons shadow">{{format(tmp.had.boostEff2)}}x</b><br><br>
+                You have <b class="hadrons shadow">{{(getHadronicBoostMag().neq(1) ? format(player.hadrons.boosters) : formatWhole(player.hadrons.boosters))+(tmp.had.extraBoosts.gt(0)?(" + "+format(tmp.had.extraBoosts)):"")}}</b> Hadronic Boosters, which are strengthening Quark & Gluon effects by <b class="gluon shadow">{{format(tmp.had.boostEff.sub(1).times(100))}}%</b>, and are multiplying Hadron gain by <b class="hadrons shadow">{{format(tmp.had.boostEff2)}}x</b><br><br>
                 <button v-bind:class="{hadrons: true, unlocked: player.hadrons.amount.gte(tmp.had.boostCost), locked: player.hadrons.amount.lt(tmp.had.boostCost)}" onclick="boostHadrons()">Reset your Hadrons for a Boost<br><br>Cost: <b class="hadrons shadow">{{format(tmp.had.boostCost)}}</b> Hadrons</button>
             </div>
             <div v-if="tabData.normal=='Annihilation'">
@@ -128,7 +133,7 @@
                         <table>
                             <tr v-for="r in annihilation_upgs.rows">
                                 <td v-for="c in annihilation_upgs.cols" v-if="annihilation_upgs[r*10+c]">
-                                    <button v-if="annihilation_upgs[r*10+c].unl()" v-bind:class="{ annihilation: !tmp.anh.upgs[r*10+c].voidSwitch, void: tmp.anh.upgs[r*10+c].voidSwitch, bought: (tmp.anh.upgs[r*10+c].voidSwitch?(getVoidUpgTier(r*10+c)>1):player.annihilation.upgs.includes(r*10+c)), unlocked: (tmp.anh.upgs[r*10+c].voidSwitch?(player.void.fabric.gte(annihilation_upgs[r*10+c].voidCost[getVoidUpgTier(r*10+c)])&&getVoidUpgTier(r*10+c)<=1):(player.annihilation.energy.gte(annihilation_upgs[r*10+c].cost)&&!player.annihilation.upgs.includes(r*10+c))), locked: (tmp.anh.upgs[r*10+c].voidSwitch?(player.void.fabric.lt(annihilation_upgs[r*10+c].voidCost[getVoidUpgTier(r*10+c)])&&getVoidUpgTier(r*10+c)<=1):(player.annihilation.energy.lt(annihilation_upgs[r*10+c].cost)&&!player.annihilation.upgs.includes(r*10+c))) }" v-on:click="buyAnnihilationUpg(r*10+c)" v-bind:style="{ width: '180px', height: '170px', position: (tmp.anh.upgs[r*10+c].voidSwitch?'relative':'static') }"><b v-bind:style="(tmp.anh.upgs[r*10+c].voidSwitch?annihilation_upgs[r*10+c].voidSize:annihilation_upgs[r*10+c].size)?{ 'font-size': (tmp.anh.upgs[r*10+c].voidSwitch?annihilation_upgs[r*10+c].voidSize:annihilation_upgs[r*10+c].size) }:{}">{{tmp.anh.upgs[r*10+c].voidSwitch?checkFunc(annihilation_upgs[r*10+c].voidDesc):annihilation_upgs[r*10+c].desc}}</b><br><span v-if="tmp.anh.upgs[r*10+c].voidSwitch?(getVoidUpgTier(r*10+c)<2):(!player.annihilation.upgs.includes(r*10+c))"><br>Cost: <b v-bind:class="{ annihilation: !tmp.anh.upgs[r*10+c].voidSwitch, void: tmp.anh.upgs[r*10+c].voidSwitch, text: tmp.anh.upgs[r*10+c].voidSwitch, shadow: !tmp.anh.upgs[r*10+c].voidSwitch }">{{formatWhole(tmp.anh.upgs[r*10+c].voidSwitch?annihilation_upgs[r*10+c].voidCost[getVoidUpgTier(r*10+c)]:annihilation_upgs[r*10+c].cost)}}</b> {{tmp.anh.upgs[r*10+c].voidSwitch?"Space-Time Fabric":"AE"}}</span><br><span v-if="tmp.anh.upgs[r*10+c].voidSwitch?annihilation_upgs[r*10+c].voidDispEff:annihilation_upgs[r*10+c].dispEff">Currently: <b v-bind:class="{ annihilation: !tmp.anh.upgs[r*10+c].voidSwitch, void: tmp.anh.upgs[r*10+c].voidSwitch, text: tmp.anh.upgs[r*10+c].voidSwitch, shadow: !tmp.anh.upgs[r*10+c].voidSwitch }">{{tmp.anh.upgs[r*10+c].voidSwitch?annihilation_upgs[r*10+c].voidDispEff(tmp.anh.upgs[r*10+c].voidEff):annihilation_upgs[r*10+c].dispEff(tmp.anh.upgs[r*10+c].eff)}}</b></span><span v-if="annihilation_upgs[r*10+c].toggle && hasAnhUpg(r*10+c) && !tmp.anh.upgs[r*10+c].voidSwitch">Auto: <input type="checkbox" v-model="player[annihilation_upgs[r*10+c].toggle]"></span><div v-if="tmp.anh.upgs[r*10+c].voidSwitch" style="position: absolute; top: 2px; left: 2px; font-weight: bold;" v-bind:class="{ void: getVoidUpgTier(r*10+c)==0, voidGold: getVoidUpgTier(r*10+c)>0, text: true }">{{getVoidUpgTier(r*10+c)}}</div></button>
+                                    <button v-if="annihilation_upgs[r*10+c].unl()" v-bind:class="{ annihilation: !tmp.anh.upgs[r*10+c].voidSwitch, void: tmp.anh.upgs[r*10+c].voidSwitch, bought: (tmp.anh.upgs[r*10+c].voidSwitch?(getVoidUpgTier(r*10+c)>getVoidUpgMaxTier()-1):player.annihilation.upgs.includes(r*10+c)), unlocked: (tmp.anh.upgs[r*10+c].voidSwitch?(player.void.fabric.gte(annihilation_upgs[r*10+c].voidCost[getVoidUpgTier(r*10+c)])&&getVoidUpgTier(r*10+c)<=getVoidUpgMaxTier()-1):(player.annihilation.energy.gte(annihilation_upgs[r*10+c].cost)&&!player.annihilation.upgs.includes(r*10+c))), locked: (tmp.anh.upgs[r*10+c].voidSwitch?(player.void.fabric.lt(annihilation_upgs[r*10+c].voidCost[getVoidUpgTier(r*10+c)])&&getVoidUpgTier(r*10+c)<=getVoidUpgMaxTier()-1):(player.annihilation.energy.lt(annihilation_upgs[r*10+c].cost)&&!player.annihilation.upgs.includes(r*10+c))) }" v-on:click="buyAnnihilationUpg(r*10+c)" v-bind:style="{ width: '180px', height: '170px', position: (tmp.anh.upgs[r*10+c].voidSwitch?'relative':'static') }"><b v-bind:style="(tmp.anh.upgs[r*10+c].voidSwitch?annihilation_upgs[r*10+c].voidSize:annihilation_upgs[r*10+c].size)?{ 'font-size': (tmp.anh.upgs[r*10+c].voidSwitch?annihilation_upgs[r*10+c].voidSize:annihilation_upgs[r*10+c].size) }:{}">{{tmp.anh.upgs[r*10+c].voidSwitch?checkFunc(annihilation_upgs[r*10+c].voidDesc):annihilation_upgs[r*10+c].desc}}</b><br><span v-if="tmp.anh.upgs[r*10+c].voidSwitch?(getVoidUpgTier(r*10+c)<getVoidUpgMaxTier()):(!player.annihilation.upgs.includes(r*10+c))"><br>Cost: <b v-bind:class="{ annihilation: !tmp.anh.upgs[r*10+c].voidSwitch, void: tmp.anh.upgs[r*10+c].voidSwitch, text: tmp.anh.upgs[r*10+c].voidSwitch, shadow: !tmp.anh.upgs[r*10+c].voidSwitch }">{{formatWhole(tmp.anh.upgs[r*10+c].voidSwitch?annihilation_upgs[r*10+c].voidCost[getVoidUpgTier(r*10+c)]:annihilation_upgs[r*10+c].cost)}}</b> {{tmp.anh.upgs[r*10+c].voidSwitch?"Space-Time Fabric":"AE"}}</span><br><span v-if="tmp.anh.upgs[r*10+c].voidSwitch?annihilation_upgs[r*10+c].voidDispEff:annihilation_upgs[r*10+c].dispEff">Currently: <b v-bind:class="{ annihilation: !tmp.anh.upgs[r*10+c].voidSwitch, void: tmp.anh.upgs[r*10+c].voidSwitch, text: tmp.anh.upgs[r*10+c].voidSwitch, shadow: !tmp.anh.upgs[r*10+c].voidSwitch }">{{tmp.anh.upgs[r*10+c].voidSwitch?annihilation_upgs[r*10+c].voidDispEff(tmp.anh.upgs[r*10+c].voidEff):annihilation_upgs[r*10+c].dispEff(tmp.anh.upgs[r*10+c].eff)}}</b></span><span v-if="annihilation_upgs[r*10+c].toggle && hasAnhUpg(r*10+c) && !tmp.anh.upgs[r*10+c].voidSwitch">Auto: <input type="checkbox" v-model="player[annihilation_upgs[r*10+c].toggle]"></span><div v-if="tmp.anh.upgs[r*10+c].voidSwitch" style="position: absolute; top: 2px; left: 2px; font-weight: bold;" v-bind:class="{ void: getVoidUpgTier(r*10+c)==0, voidGold: getVoidUpgTier(r*10+c)>0, text: true }">{{getVoidUpgTier(r*10+c)}}</div></button>
                                 </td>
                             </tr>
                             <tr v-for="r in void_anh_upg_rows">
@@ -177,10 +182,11 @@
                         <td><button class="photons unlocked" onclick="maxAllPhotonGens()"><b>Max All</b></button></td>
                     </tr>
                     <tr>
-                        <td v-for="(x,i) in photon_data" v-bind:class="{ photonDiv: true, [x.id]: true }" v-if="x.unl()"><h3>{{x.color}} Photons: {{format(player.photons.colors[i].amt)}} <span style="font-size: 12px;">(+{{format(tmp.ph.col[i].gain)}}/s)</span></h3><span v-html="(x.id=='uv'&&!hasAQUpg(33))?'':x.dispEff(tmp.ph.col[i].eff.eff)"></span>{{(x.id=="uv"&&!hasAQUpg(33))?"":"."}}<br>{{x.dispProd(tmp.ph.col[i].eff.prod)}}.<br><br><button v-bind:class="{ photonGenerator: true, photons: true, unlocked: player.photons.matter.gte(tmp.ph.col[i].genCost), locked: player.photons.matter.lt(tmp.ph.col[i].genCost) }" v-on:click="buyPhotonGen(i)"><b v-bind:class="{ [x.id]: true, text: true }">Purchase a {{x.color}} Photon Generator</b><br>Cost: <b class="normal shadow">{{format(tmp.ph.col[i].genCost)}}</b> Photonic Matter<br><br>Level: <b v-bind:class="{ [x.id]: true, text: true }">{{formatWhole(player.photons.colors[i].gen)}}</b><br>Base {{x.color}} Photon gain: <b v-bind:class="{ [x.id]: true, text: true }">{{format(tmp.ph.col[i].genEff)}}/s</b></button></td>
+                        <td v-for="(x,i) in photon_data" v-bind:class="{ photonDiv: true, [x.id]: true }" v-if="x.unl()"><h3>{{x.color}} Photons: {{format(player.photons.colors[i].amt)}} <span style="font-size: 12px;">(+{{format(tmp.ph.col[i].gain.times(tmp.ph.phMul))}}/s)</span></h3><span v-html="(x.id=='uv'&&!hasAQUpg(33))?'':x.dispEff(tmp.ph.col[i].eff.eff)"></span>{{(x.id=="uv"&&!hasAQUpg(33))?"":"."}}<br>{{x.dispProd(tmp.ph.col[i].eff.prod)}}.<br><br><button v-bind:class="{ photonGenerator: true, photons: true, unlocked: player.photons.matter.gte(tmp.ph.col[i].genCost), locked: player.photons.matter.lt(tmp.ph.col[i].genCost) }" v-on:click="buyPhotonGen(i)"><b v-bind:class="{ [x.id]: true, text: true }">Purchase a {{x.color}} Photon Generator</b><br>Cost: <b class="normal shadow">{{format(tmp.ph.col[i].genCost)}}</b> Photonic Matter<br><br>Level: <b v-bind:class="{ [x.id]: true, text: true }">{{formatWhole(player.photons.colors[i].gen)}}</b><br>Base {{x.color}} Photon gain: <b v-bind:class="{ [x.id]: true, text: true }">{{format(tmp.ph.col[i].genEff)}}/s</b></button></td>
                     </tr>
                 </table>
                 <table v-if="tabData.ph=='Ultrawaves'">
+                    <span v-if="!player.dup.unl"><button v-bind:class="{ duplicators: true, unlocked: tmp.ph.uwt.gte(dup_unl), locked: tmp.ph.uwt.lt(dup_unl) }" onclick="unlockDup()">Unlock Duplicators<br><br>Req: <b class="normal shadow">{{formatWhole(dup_unl)}}</b> Total Ultrawaves</button><br><br></span>
                     <tr>
                         <td>Your Space-Time Fabric has generated <b class="photons shadow" style="font-size: 25px;">{{format(player.photons.matter)}}</b> Photonic Matter (+{{format(tmp.ph.gain)}}/s)</td>
                     </tr>
@@ -197,6 +203,29 @@
                     </tr>
                     <tr>
                         <td><button class="ultrawaves unlocked" onclick="respecWaveAcc()"><b>Sell All Wave Accelerators</b></button></td>
+                    </tr>
+                </table>
+            </div>
+            <div v-if="tabData.normal=='Duplicators'">
+                You have <b class="duplicators shadow" style="font-size: 25px;">{{formatWhole(tmp.dup.amount)}}</b> Duplicators (&times;{{format(getDuplicatorGain().root(tmp.dup.speed))}} per Duplicator Essence consumed)<br/>
+                Duplicator Essence: <b class="duplicators shadow">{{format(player.dup.essence)}}</b> (-{{format(tmp.dup.speed)}}/s) {{Decimal.gte(tmp.dup.amount, tmp.dup.haltStart) ? "[Halting after " + format(tmp.dup.haltStart) + "]" : ""}}<br/><br/>
+                <button v-bind:class="{ duplicators: true, unlocked: player.aq.energy.gte(tmp.dup.essenceCost), locked: player.aq.energy.lt(tmp.dup.essenceCost) }" onclick="buyDupEssence()">Buy Duplicator Essence<br><br>Cost: <b class="normal shadow">{{format(tmp.dup.essenceCost)}}</b> Anti-Energy</button>
+                <button v-if="hasDupUnl(1)" v-bind:class="{ duplicators: true, unlocked: player.photons.matter.gte(tmp.dup.essenceCostPM), locked: player.photons.matter.lt(tmp.dup.essenceCostPM) }" onclick="buyDupEssencePM()">Buy Duplicator Essence<br><br>Cost: <b class="normal shadow">{{format(tmp.dup.essenceCostPM)}}</b> Photonic Matter</button><br><br>
+                <table>
+                    <tr v-for="(data,i) in dup_effects">
+                        <td v-bind:class="{ dupDiv: true, bought: hasDupEff(i) }" v-if="data.unl()">
+                            <b class="duplicators shadow">Duplicator Effect {{i+1}} {{hasDupEff(i) ? "" : "[LOCKED]"}}</b><br/>
+                            Req: {{formatWhole(data.req)}} Duplicators<br/><br/>
+                            {{data.desc}}<br/>
+                            Currently: {{data.effSymbol ?? "×"}}{{format(hasDupEff(i) ? tmp.dup.eff[i] : 1)}}
+                        </td>
+                    </tr>
+                    <tr v-for="(data,i) in dup_unlocks">
+                        <td v-bind:class="{ dupDiv: true, bought: hasDupUnl(i) }" v-if="data.unl()">
+                            <b class="duplicators shadow">Duplicator Unlock {{i+1}} {{hasDupUnl(i) ? "" : "[LOCKED]"}}</b><br/>
+                            Req: {{formatWhole(data.req)}} Duplicators<br/><br/>
+                            {{data.desc}}<br/>
+                        </td>
                     </tr>
                 </table>
             </div>

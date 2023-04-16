@@ -12,6 +12,11 @@ function gameLoop(diff) {
         boostHadrons(true, true)
     }
     if (hasAQUpg(32)) setUniverseEssence();
+    if (hasAQUpg(15)) {
+        const gain = AQUpgEff(15).times(tmp.anh.gain).times(diff);
+        player.annihilation.energy = Decimal.add(player.annihilation.energy, gain);
+        player.annihilation.total = Decimal.add(player.annihilation.total, gain)
+    }
     if (player.autoUU && hasAnhUpg(26)) maxAllUniUpgs(true);
     
     if (player.void.unl) {
@@ -19,6 +24,7 @@ function gameLoop(diff) {
     }
     if (player.photons.unl) photonLoop(diff);
     if (player.aq.unl) AQLoop(diff);
+    if (player.dup.unl) dupLoop(diff);
 }
 
 function getSize(time) {
@@ -77,6 +83,7 @@ function getUniverseCompactionStart() {
     start = start.times(tmp.upgs[33].eff);
     if (player.hadrons.unl) start = start.times(tmp.had.eff);
     if (hasAnhUpg(25)) start = start.times(2);
+    if (hasAQUpg(53)) start = start.times(AQUpgEff(53))
     return start;
 }
 

@@ -18,6 +18,7 @@ function getAnhGainMult() {
     let mult = new Decimal(1);
     if (player.void.unl && tmp.void) mult = mult.times(tmp.void.upgs[3].eff);
     if (voidUpgActive(24)) mult = mult.times(tmp.anh.upgs[24].voidEff.ae);
+    if (hasDupEff(1)) mult = mult.times(tmp.dup.eff[1]);
     return mult;
 }
 function getAnhGain() { 
@@ -96,8 +97,8 @@ const annihilation_upgs = {
         dispEff(e) { return format(e)+"x" },
 
         voidDesc: "Space-Time Fabric reduces the Dimensional Depth requirement.",
-        voidCost: [new Decimal(10), new Decimal(1e9)],
-        voidEff() { return Decimal.pow(10, player.void.fabric.plus(1).log10().sqrt().times((hasAnhUpg(31)&&getVoidUpgTier(11)>1)?1.25:1)).sqrt() },
+        voidCost: [new Decimal(10), new Decimal(1e9), new Decimal("1e450")],
+        voidEff() { return Decimal.pow(10, player.void.fabric.plus(1).log10().sqrt().times((hasAnhUpg(31)&&getVoidUpgTier(11)>1)?1.25:1).times(getVoidUpgTier(11)>2?5:1).root(getVoidUpgTier(11)>2?1:2)) },
         voidDispEff(e) { return "/"+format(e) },
         voidSize: "0.95em",
     },
@@ -109,8 +110,8 @@ const annihilation_upgs = {
         dispEff(e) { return format(e)+"x" },
 
         voidDesc: "Universe Essence boosts Space-Time Fabric gain.",
-        voidCost: [new Decimal(32), new Decimal(1e17)],
-        voidEff() { return player.essence.div(10).plus(1).sqrt().times((hasAnhUpg(31)&&getVoidUpgTier(12)>1)?1.25:1) },
+        voidCost: [new Decimal(32), new Decimal(1e17), new Decimal("1e500")],
+        voidEff() { return player.essence.div(10).plus(1).root(getVoidUpgTier(12)>2?1:2).times((hasAnhUpg(31)&&getVoidUpgTier(12)>1)?1.25:1).times(getVoidUpgTier(12)>2?1.25:1) },
         voidDispEff(e) { return format(e)+"x" },
     },
     13: {
@@ -124,8 +125,8 @@ const annihilation_upgs = {
         desc: "The Gluon & Hadrons grow 10x as fast.",
         cost: new Decimal(2),
 
-        voidDesc() { return "Hadrons' nerf to their own production is "+((hasAnhUpg(31)&&getVoidUpgTier(14)>1)?"67":"50")+"% weaker." },
-        voidCost: [new Decimal(5e3), new Decimal(5e13)],
+        voidDesc() { return "Hadrons' nerf to their own production is "+(getVoidUpgTier(14)>2 ? "90" : (hasAnhUpg(31)&&getVoidUpgTier(14)>1)?"67":"50")+"% weaker." },
+        voidCost: [new Decimal(5e3), new Decimal(5e13), new Decimal("1e540")],
     },
     15: {
         unl() { return player.annihilation.upgs.includes(13) && player.annihilation.upgs.length>=3 },
@@ -141,7 +142,7 @@ const annihilation_upgs = {
         dispEff(e) { return "+"+format(e) },
 
         voidDesc: "The Gluon's effect also affects Quark gain.",
-        voidCost: [new Decimal(5e3), new Decimal(1e15)],
+        voidCost: [new Decimal(5e3), new Decimal(1e15), new Decimal("1e570")],
     },
     21: {
         unl() { return player.annihilation.upgs.length>=5 },
@@ -151,8 +152,8 @@ const annihilation_upgs = {
         dispEff(e) { return format(e)+"x" },
 
         voidDesc: "Space-Time Fabric boosts its own gain.",
-        voidCost: [new Decimal(1e4), new Decimal(1e18)],
-        voidEff() { return player.void.fabric.plus(1).root(player.void.fabric.plus(1).log10().plus(1).sqrt().div((hasAnhUpg(31)&&getVoidUpgTier(21)>1)?1.25:1)) },
+        voidCost: [new Decimal(1e4), new Decimal(1e18), new Decimal("1e600")],
+        voidEff() { return player.void.fabric.plus(1).root(player.void.fabric.plus(1).log10().plus(1).root(getVoidUpgTier(21)>2?player.void.fabric.plus(1).log10().plus(1).log10().sqrt().div(100).plus(2).min(10):2).div(getVoidUpgTier(21)>2?1.5:1).div((hasAnhUpg(31)&&getVoidUpgTier(21)>1)?1.25:1)) },
         voidDispEff(e) { return format(e)+"x" },
     },
     22: {
@@ -178,12 +179,12 @@ const annihilation_upgs = {
         dispEff(e) { return "+"+format(e) },
 
         voidDesc: "You get Depths in bulk, and AE & Space-Time Fabric boost each other's gain.",
-        voidCost: [new Decimal(4e9), new Decimal(1.5e14)],
+        voidCost: [new Decimal(4e9), new Decimal(1.5e14), new Decimal("6.666e666")],
         voidEff() { 
-            let exp = new Decimal((hasAnhUpg(31)&&getVoidUpgTier(24)>1)?1.25:1)
+            let exp = new Decimal((hasAnhUpg(31)&&getVoidUpgTier(24)>1)?1.25:1).times(getVoidUpgTier(24)>2?1.5:1);
             if (player.photons.unl) exp = exp.times(tmp.ph.col[5].eff.eff);
             return {
-                ae: player.void.fabric.plus(1).log10().plus(1).pow(exp),
+                ae: player.void.fabric.plus(1).log10().plus(1).pow(exp.times(getVoidUpgTier(24)>2?3:1)),
                 stf: player.annihilation.energy.plus(1).log10().plus(1).pow(exp.times(2)),
             }
         },
@@ -218,8 +219,8 @@ const annihilation_upgs = {
         eff() { return player.void.fabric.plus(1).log10().plus(1).log(5) },
         dispEff(e) { return "+"+format(e.times(100))+"%" },
 
-        voidDesc() { return "Rebuyable Void Upgrades are "+((hasAnhUpg(31)&&getVoidUpgTier(32)>1)?"25":"20")+"% stronger." },
-        voidCost: [new Decimal(1e24), new Decimal(2e37)],
+        voidDesc() { return "Rebuyable Void Upgrades are "+(getVoidUpgTier(32)>2 ? "32" : ((hasAnhUpg(31)&&getVoidUpgTier(32)>1)?"25":"20"))+"% stronger." },
+        voidCost: [new Decimal(1e24), new Decimal(2e37), new Decimal("6e743")],
     },
     33: {
         unl() { return player.photons.unl && player.annihilation.upgs.length>=13 },
@@ -235,8 +236,8 @@ const annihilation_upgs = {
         dispEff(e) { return "/"+format(e) },
         size: "0.9em",
         
-        voidDesc() { return "Quark Charge is "+((hasAnhUpg(31)&&getVoidUpgTier(34)>1)?"150% stronger.":"twice as strong.") },
-        voidCost: [new Decimal(5e34), new Decimal(2.5e46)],
+        voidDesc() { return "Quark Charge is "+(getVoidUpgTier(34)>2?"thrice as strong.":((hasAnhUpg(31)&&getVoidUpgTier(34)>1)?"150% stronger.":"twice as strong.")) },
+        voidCost: [new Decimal(5e34), new Decimal(2.5e46), new Decimal("1e800")],
     },
     35: {
         unl() { return player.photons.unl && player.annihilation.upgs.length>=15 },
@@ -244,8 +245,8 @@ const annihilation_upgs = {
         cost: new Decimal(1e17),
         
         voidDesc: "The Space-Time Fabric production slowdown is weaker based on AE.",
-        voidCost: [new Decimal(5e34), new Decimal(2.5e46)],
-        voidEff() { return Decimal.sub(1, Decimal.div(1, player.annihilation.energy.plus(1).log10().plus(1).log10().times((hasAnhUpg(31, true)&&player.void.active&&!annihilation_upgs[31].keepVoid&&getVoidUpgTier(35)>1)?.625:.5).plus(1))) },
+        voidCost: [new Decimal(5e34), new Decimal(2.5e46), new Decimal("1e828")],
+        voidEff() { return Decimal.sub(1, Decimal.div(1, player.annihilation.energy.plus(1).log10().plus(1).log10().times(getVoidUpgTier(35)>2?2:1).times((hasAnhUpg(31, true)&&player.void.active&&!annihilation_upgs[31].keepVoid&&getVoidUpgTier(35)>1)?.625:.5).plus(1))) },
         voidDispEff(e) { return format(e.times(100))+"% weaker" },
         voidSize: "0.9em",
     },
@@ -263,8 +264,8 @@ const annihilation_upgs = {
         size: "0.75em",
         
         voidDesc: "Photonic Matter boosts Space-Time Fabric gain.",
-        voidCost: [new Decimal(1e40), new Decimal(1e50)],
-        voidEff() { return Decimal.pow(2, player.photons.matter.plus(1).log2().sqrt().div(2).times((hasAnhUpg(31, true)&&player.void.active&&!annihilation_upgs[31].keepVoid&&getVoidUpgTier(36)>1)?1.25:1)) },
+        voidCost: [new Decimal(1e40), new Decimal(1e50), new Decimal("1e851")],
+        voidEff() { return Decimal.pow(2, player.photons.matter.plus(1).log2().root(getVoidUpgTier(36)>2?1.5:2).div(2).times(getVoidUpgTier(36)>2?1.5:1).times((hasAnhUpg(31, true)&&player.void.active&&!annihilation_upgs[31].keepVoid&&getVoidUpgTier(36)>1)?1.25:1)) },
         voidDispEff(e) { return format(e)+"x" },
     },
 }
@@ -280,9 +281,9 @@ function buyAnnihilationUpg(id) {
     let data = annihilation_upgs[id];
     if (player.void.active && !data.keepVoid) {
         if (player.void.fabric.lt(data.voidCost[player.void.upgs[id]||0])) return;
-        if ((player.void.upgs[id]||0)>=2) return;
+        if ((player.void.upgs[id]||0)>=getVoidUpgMaxTier()) return;
         player.void.fabric = player.void.fabric.sub(data.voidCost[player.void.upgs[id]||0]);
-        player.void.upgs[id] = Math.min((player.void.upgs[id]||0)+1, 2);
+        player.void.upgs[id] = Math.min((player.void.upgs[id]||0)+1, getVoidUpgMaxTier());
     } else {
         if (player.annihilation.upgs.includes(id)) return;
         let old = getUniverseEssenceGainMult()

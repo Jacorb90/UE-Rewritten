@@ -19,6 +19,7 @@ const tabs = {
         Hadrons() { return player.hadrons.unl },
         Annihilation() { return player.depth.gte(anhBaseReq)||player.annihilation.reached },
         Photons() { return player.photons.unl },
+        Duplicators() { return player.dup.unl }
     },
     qk: {
         Quarks() { return player.aq.unl },
@@ -32,7 +33,7 @@ const tabs = {
     ph: {
         Photons() { return hasAQUpg(43) },
         Ultrawaves() { return hasAQUpg(43) },
-    },
+    }
 }
 
 function showTab(name, type) { if (tabs[type][name]()) tabData[type] = name }
@@ -58,6 +59,7 @@ function startPlayer() { return {
     void: playerVoidData(),
     photons: playerPhotonsData(),
     aq: playerAQData(),
+    dup: playerDupData()
 }}
 
 function save() {
@@ -192,6 +194,18 @@ function loadVue() {
             getUltrawaveGain,
             getUltrawaveNext,
             minAllWaveAcc,
+            dup_unl,
+            unlockDup,
+            getDuplicatorGain,
+            buyDupEssence,
+            dup_effects,
+            dup_unlocks,
+            hasDupEff,
+            hasDupUnl,
+            buyAQCharge,
+            getHadronicBoostMag,
+            getVoidUpgMaxTier,
+            buyDupEssencePM
         },
     })
 }

@@ -6,6 +6,7 @@ function playerAQData() { return {
     green: new Decimal(0),
     blue: new Decimal(0),
     energy: new Decimal(0),
+    charge: new Decimal(0),
     upgs: [],
 }}
 
@@ -25,8 +26,8 @@ function getAntiGluonScaleName() {
     return ["", "Folded ", "Compressed "][scale]
 }
 
-function getAQEffExp(type) {
-    let exp = new Decimal(1)
+function getAQEffRoot(type) {
+    let exp = tmp.aq.chargeEff;
     return exp;
 }
 
@@ -39,6 +40,7 @@ function getGlobalAQGainMult() {
 function getAQGain(type) {
     if (!player.aq.unl) return new Decimal(0);
     let gain = Decimal.div(1, tmp.aq.eff["anti"+quark_types[(quark_types.indexOf(type)+2)%quark_types.length]]);
+    if (hasDupEff(3)) gain = gain.times(tmp.dup.eff[3]);
     return gain;
 }
 
@@ -79,12 +81,13 @@ function getAQEnergyGain() {
     let gain = tmp.aq.net.div(3).cbrt();
     if (hasAQUpg(11)) gain = gain.times(AQUpgEff(11));
     if (hasAQUpg(21)) gain = gain.times(tmp.aq.gluon.eff);
+    if (hasDupEff(3)) gain = gain.times(tmp.dup.eff[3]);
     return gain;
 }
 
 const aq_upgs = {
-    rows: 4,
-    cols: 4,
+    rows: 5,
+    cols: 5,
     11: {
         unl() { return player.aq.unl },
         type: "aq",
@@ -116,6 +119,14 @@ const aq_upgs = {
         cost: new Decimal(2e9),
         eff(p) { return player.aq.red.plus(1).log10().times(p).plus(1) },
         dispEff(e) { return "Currently: /"+format(e) },
+    },
+    15: {
+        unl() { return hasDupUnl(0) },
+        type: "annihilation",
+        desc: "Gain Annihilation Energy over time.",
+        cost: new Decimal("6.666e24"),
+        eff(p) { return p },
+        dispEff(e) { return "Currently: " + format(e.times(100)) + "% of AE gain/s" },
     },
     21: {
         unl() { return player.aq.upgs.includes(11) },
@@ -149,6 +160,14 @@ const aq_upgs = {
         eff(p) { return player.aq.green.plus(1).log10().plus(1).pow(p.times(4)) },
         dispEff(e) { return "Currently: "+format(e)+"x" },
     },
+    25: {
+        unl() { return hasDupUnl(0) },
+        type: "ultrawaves",
+        desc: "Wave Accelerators are slightly stronger.",
+        cost: new Decimal("1.234e25"),
+        eff(p) { return p.sub(1).div(5).plus(1).sqrt() },
+        dispEff(e) { return "Currently: " + format(e.sub(1).times(100)) + "% stronger" },
+    },
     31: {
         unl() { return player.aq.upgs.includes(21) },
         type: "hadrons",
@@ -181,6 +200,14 @@ const aq_upgs = {
         eff(p) { return player.aq.blue.plus(1).log10().times(p).plus(1).log2().plus(1) },
         dispEff(e) { return "Currently: "+format(e)+"th root" },
     },
+    35: {
+        unl() { return hasDupUnl(0) },
+        type: "hadrons",
+        desc: "Multiply Hadronic Booster gain based on Total Ultrawaves.",
+        cost: new Decimal("1e62"),
+        eff(p) { return (tmp.ph?.uwt ?? getTotalUltrawaves()).div(100).times(p).plus(1) },
+        dispEff(e) { return "Currently: " + format(e) + "x" },
+    },
     41: {
         unl() { return player.aq.upgs.includes(31) },
         type: "void",
@@ -211,6 +238,50 @@ const aq_upgs = {
         desc: "Wave Accelerators affect UV Photons.",
         cost: new Decimal(2.222e22),
     },
+    45: {
+        unl() { return hasDupUnl(0) },
+        type: "annihilation",
+        desc: "Annihilation Energy effect formula is more efficient.",
+        cost: new Decimal("1e64")
+    },
+    51: {
+        unl() { return hasDupUnl(0) },
+        type: "photons",
+        desc: "Hadronic Boosters strengthen Photon effects.",
+        cost: new Decimal("2.4e24"),
+        eff(p) { return tmp.had ? tmp.had.boostEff.max(1).log10().div(10).times(p).plus(1) : 1 },
+        dispEff(e) { return "Currently: " + format(e.sub(1).times(100)) + "% stronger" },
+    },
+    52: {
+        unl() { return hasDupUnl(0) },
+        type: "aq",
+        desc: "Unlock Antiquark Charge.",
+        cost: new Decimal("1.5e25"),
+        eff(p) { return p.sub(1).times(100) },
+        dispEff(e) { return "Effect Power: "+format(e)+"%" },
+    },
+    53: {
+        unl() { return hasDupUnl(0) },
+        type: "universe",
+        desc: "Universal Compaction starts later based on Total Duplicator Essence.",
+        cost: new Decimal("1e63"),
+        eff(p) { return player.dup.totalEssence.plus(player.dup.totalEssencePM).div(5).times(p).plus(1) },
+        dispEff(e) { return "Currently: " + format(e) + "x later" },
+    },
+    54: {
+        unl() { return hasDupUnl(0) },
+        type: "void",
+        desc: "Void Upgrades can be bought a third time in The Void, boosting their effects.",
+        cost: new Decimal("1e64")
+    },
+    55: {
+        unl() { return player.aq.upgs.includes(52) },
+        type: "duplicators",
+        desc: "Duplicator Essence is consumed faster based on Antiquark Charge.",
+        cost: new Decimal("1e45"),
+        eff(p) { return player.aq.charge.times(p).div(10).plus(1) },
+        dispEff(e) { return "Currently: " + format(e) + "x" }
+    }
 }
 
 function getAQUpgPower() {
@@ -223,7 +294,7 @@ function hasAQUpg(id) {
 }
 
 function AQUpgEff(id) {
-    return tmp.aq.upgs[id]
+    return tmp.aq ? tmp.aq.upgs[id] : aq_upgs[id].eff?.(getAQUpgPower())
 }
 
 function buyAQUpg(id) {
@@ -232,4 +303,42 @@ function buyAQUpg(id) {
     if (player.aq.energy.lt(aq_upgs[id].cost)) return;
     player.aq.energy = player.aq.energy.sub(aq_upgs[id].cost);
     player.aq.upgs.push(id);
+}
+
+function getAQChargeCost() {
+    let c = player.aq.charge;
+    if (c.gte(10)) c = Decimal.pow(10, c.log10().pow(2).times(2).sub(1));
+    let cost = Decimal.pow(2.5, c.pow(1.2)).times(1e5);
+    return cost;
+}
+
+function getAQChargeTarget() {
+    let n = tmp.aq.net;
+    let t = n.div(1e5).max(0.5).log(2.5).root(1.2);
+    if (t.gte(10)) t = Decimal.pow(10, t.log10().plus(1).div(2).sqrt());
+    return t.plus(1).floor()
+}
+
+function buyAQCharge(auto=false, max=false) {
+    if (!hasAQUpg(52)) return;
+    if (!auto) {
+        tmp.aq.net = player.aq.red.plus(player.aq.blue).plus(player.aq.green)
+        tmp.aq.chargeCost = getAQChargeCost();
+    }
+    if (tmp.aq.net.lt(tmp.aq.chargeCost)) return;
+    if (!max) {
+        subTotalAQ(tmp.aq.chargeCost);
+        player.aq.charge = player.aq.charge.plus(1);
+    } else player.aq.charge = player.aq.charge.max(getAQChargeTarget())
+}
+
+function subTotalAQ(x) {
+    for (g=0; g<3; g++) player.aq[quark_types[g]] = player.aq[quark_types[g]].sub(player.aq[quark_types[g]].div(tmp.aq.net).times(x).min(player.aq[quark_types[g]]))
+}
+
+function getAQChargeEff() {
+    if (!hasAQUpg(52)) return new Decimal(1);
+
+    let eff = player.aq.charge.div(100).times(AQUpgEff(52));
+    return eff.plus(1);
 }

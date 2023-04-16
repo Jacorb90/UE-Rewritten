@@ -45,7 +45,12 @@ function getSTFabricGain() {
     if (voidUpgActive(21)) gain = gain.times(tmp.anh.upgs[21].voidEff);
     if (voidUpgActive(24)) gain = gain.times(tmp.anh.upgs[24].voidEff.stf);
     if (voidUpgActive(36)) gain = gain.times(tmp.anh.upgs[36].voidEff);
+    if (hasDupEff(0)) gain = gain.times(tmp.dup.eff[0]);
     return gain;
+}
+
+function getVoidUpgMaxTier() {
+    return hasAQUpg(54) ? 3 : 2;
 }
 
 function voidLoop(diff) {
@@ -83,7 +88,7 @@ const void_rep_upgs = {
 
 function getVoidRepUpgPower() {
     let power = new Decimal(1);
-    if (voidUpgActive(32)) power = power.times((hasAnhUpg(31)&&getVoidUpgTier(32)>1)?1.25:1.2)
+    if (voidUpgActive(32)) power = power.times(getVoidUpgTier(32)>2?1.32:((hasAnhUpg(31)&&getVoidUpgTier(32)>1)?1.25:1.2))
     if (hasAQUpg(41)) power = power.times(AQUpgEff(41));
     return power;
 }
