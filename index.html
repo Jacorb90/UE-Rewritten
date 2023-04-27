@@ -207,27 +207,39 @@
                 </table>
             </div>
             <div v-if="tabData.normal=='Duplicators'">
-                You have <b class="duplicators shadow" style="font-size: 25px;">{{formatWhole(tmp.dup.amount)}}</b> Duplicators (&times;{{format(getDuplicatorGain().root(tmp.dup.speed))}} per Duplicator Essence consumed)<br/>
-                Duplicator Essence: <b class="duplicators shadow">{{format(player.dup.essence)}}</b> (-{{format(tmp.dup.speed)}}/s) {{Decimal.gte(tmp.dup.amount, tmp.dup.haltStart) ? "[Halting after " + format(tmp.dup.haltStart) + "]" : ""}}<br/><br/>
-                <button v-bind:class="{ duplicators: true, unlocked: player.aq.energy.gte(tmp.dup.essenceCost), locked: player.aq.energy.lt(tmp.dup.essenceCost) }" onclick="buyDupEssence()">Buy Duplicator Essence<br><br>Cost: <b class="normal shadow">{{format(tmp.dup.essenceCost)}}</b> Anti-Energy</button>
-                <button v-if="hasDupUnl(1)" v-bind:class="{ duplicators: true, unlocked: player.photons.matter.gte(tmp.dup.essenceCostPM), locked: player.photons.matter.lt(tmp.dup.essenceCostPM) }" onclick="buyDupEssencePM()">Buy Duplicator Essence<br><br>Cost: <b class="normal shadow">{{format(tmp.dup.essenceCostPM)}}</b> Photonic Matter</button><br><br>
-                <table>
-                    <tr v-for="(data,i) in dup_effects">
-                        <td v-bind:class="{ dupDiv: true, bought: hasDupEff(i) }" v-if="data.unl()">
-                            <b class="duplicators shadow">Duplicator Effect {{i+1}} {{hasDupEff(i) ? "" : "[LOCKED]"}}</b><br/>
-                            Req: {{formatWhole(data.req)}} Duplicators<br/><br/>
-                            {{data.desc}}<br/>
-                            Currently: {{data.effSymbol ?? "×"}}{{format(hasDupEff(i) ? tmp.dup.eff[i] : 1)}}
-                        </td>
-                    </tr>
-                    <tr v-for="(data,i) in dup_unlocks">
-                        <td v-bind:class="{ dupDiv: true, bought: hasDupUnl(i) }" v-if="data.unl()">
-                            <b class="duplicators shadow">Duplicator Unlock {{i+1}} {{hasDupUnl(i) ? "" : "[LOCKED]"}}</b><br/>
-                            Req: {{formatWhole(data.req)}} Duplicators<br/><br/>
-                            {{data.desc}}<br/>
-                        </td>
+                <table v-if="hasDupUnl(2)" style="margin-bottom: 10px;">
+                    <tr>
+                        <td v-for="(tab, name) in tabs.dup"><button v-if="tabs.dup[name]()" v-on:click="showTab(name, 'dup')" v-bind:class="{duplicators: true, tabbtn: true, smol: true, wide: true, unlocked: true}">{{name}}</button></td>
                     </tr>
                 </table>
+                <div v-if="tabData.dup=='Duplicators'">
+                    You have <b class="duplicators shadow" style="font-size: 25px;">{{formatWhole(tmp.dup.amount)}}</b> Duplicators (&times;{{format(getDuplicatorGain().root(tmp.dup.speed))}} per Duplicator Essence consumed)<br/>
+                    Duplicator Essence: <b class="duplicators shadow">{{format(player.dup.essence)}}</b> (-{{format(tmp.dup.speed)}}/s) {{Decimal.gte(tmp.dup.amount, tmp.dup.haltStart) ? "[Halting after " + format(tmp.dup.haltStart) + "]" : ""}}<br/><br/>
+                    <button v-if="Decimal.gte(player.dup.depths, 1)" class="duplicators unlocked" onclick="maxAllDupEssence()">Max All</button><br/><br/>
+                    <button v-bind:class="{ duplicators: true, unlocked: player.aq.energy.gte(tmp.dup.essenceCost), locked: player.aq.energy.lt(tmp.dup.essenceCost) }" onclick="buyDupEssence()">Buy Duplicator Essence [{{formatWhole(player.dup.totalEssence)}}]<br><br>Cost: <b class="normal shadow">{{format(tmp.dup.essenceCost)}}</b> Anti-Energy</button>
+                    <button v-if="hasDupUnl(1)" v-bind:class="{ duplicators: true, unlocked: player.photons.matter.gte(tmp.dup.essenceCostPM), locked: player.photons.matter.lt(tmp.dup.essenceCostPM) }" onclick="buyDupEssencePM()">Buy Duplicator Essence [{{formatWhole(player.dup.totalEssencePM)}}]<br><br>Cost: <b class="normal shadow">{{format(tmp.dup.essenceCostPM)}}</b> Photonic Matter</button><br><br>
+                    <table>
+                        <tr v-for="(data,i) in dup_effects">
+                            <td v-bind:class="{ dupDiv: true, bought: hasDupEff(i) }" v-if="data.unl()">
+                                <b class="duplicators shadow">Duplicator Effect {{i+1}} {{hasDupEff(i) ? "" : "[LOCKED]"}}</b><br/>
+                                Req: {{formatWhole(data.req)}} Duplicators<br/><br/>
+                                {{data.desc}}<br/>
+                                Currently: {{data.effSymbol ?? "×"}}{{format(hasDupEff(i) ? tmp.dup.eff[i] : 1)}}
+                            </td>
+                        </tr>
+                        <tr v-for="(data,i) in dup_unlocks">
+                            <td v-bind:class="{ dupDiv: true, bought: hasDupUnl(i) }" v-if="data.unl()">
+                                <b class="duplicators shadow">Duplicator Unlock {{i+1}} {{hasDupUnl(i) ? "" : "[LOCKED]"}}</b><br/>
+                                Req: {{formatWhole(data.req)}} Duplicators<br/><br/>
+                                {{data.desc}}<br/>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div v-if="tabData.dup=='Dupli-Depths'">
+                    You have completed <b class="duplicators shadow">{{formatWhole(player.dup.depths)}}</b> Dupli-Depths, which reduce Duplicator Essence costs by <b class="duplicators shadow">{{format(Decimal.sub(1, Decimal.div(1, tmp.dup.depthEff)).times(100))}}%</b>, but reduces the Duplicator base by <b class="duplicators shadow">{{format(Decimal.sub(1, Decimal.div(1, tmp.dup.depthNerf)).times(100))}}%</b>.<br/><br/>
+                    <button v-bind:class="{duplicators: true, unlocked: tmp.dup.amount.gte(tmp.dup.dupReq), locked: tmp.dup.amount.lt(tmp.dup.dupReq)}" onclick="dupDepth()">Reach <b class="normal shadow">{{format(tmp.dup.dupReq, 3)}} Duplicators</b> to delve into Dupli-Depth <b class="duplicators shadow">{{formatWhole(Decimal.add(player.dup.depths, 1))}}</b><br/><br/>Forces an Ultrawave reset, and resets Anti-Quark Energy & Duplicators.</button><br><br>
+                </div>
             </div>
         </div>
     </div> 

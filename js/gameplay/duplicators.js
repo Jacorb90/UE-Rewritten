@@ -30,6 +30,13 @@ const dup_effects = [
         desc: "Duplicators divide Ultrawave & Dimensional Depth requirements.",
         effect() { return tmp.dup.amount.max(1) },
         effSymbol: "/"
+    },
+    {
+        unl() { return hasDupEff(4) },
+        req: new Decimal("1e66"),
+        desc: "Duplicators divide Duplicator Essence costs.",
+        effect() { return tmp.dup.amount.max(1) },
+        effSymbol: "/"
     }
 ]
 const dup_unlocks = [
@@ -45,8 +52,8 @@ const dup_unlocks = [
     },
     {
         unl() { return hasDupUnl(1) },
-        req: new Decimal("1e7777777"),
-        desc: "Unlock ??? (PLACEHOLDER, will unlock at 1e45 Duplicators)."
+        req: new Decimal("1e45"),
+        desc: "Unlock Dupli-Depths, and consume Duplicator Essence faster based on its amount."
     }
 ]
 
@@ -56,6 +63,7 @@ function playerDupData() { return {
     totalEssence: new Decimal(0),
     totalEssencePM: new Decimal(0),
     time: new Decimal(0),
+    depths: new Decimal(0),
     effects: [],
     unlocks: []
 }}
@@ -68,20 +76,42 @@ function unlockDup() {
     showTab("Duplicators", "normal");
 }
 
+function getDupEssenceCostDiv() {
+    let d = new Decimal(1);
+    if (hasDupEff(5)) d = d.mul(tmp?.dup?.eff?.[5] ?? dup_effects[5].effect())
+    return d;
+}
+
 function getDupEssenceCost() {
-    let ess = player.dup.totalEssence;
+    let ess = Decimal.div(player.dup.totalEssence, tmp.dup.depthEff);
     if (ess.gte(40)) ess = ess.pow(2).div(20);
-    return Decimal.pow(1.1, Decimal.pow(ess, 1.2)).times(1e22);
+    return Decimal.pow(1.1, Decimal.pow(ess, 1.2)).times(1e22).div(getDupEssenceCostDiv());
+}
+function getDupEssenceTarget() {
+    const e = Decimal.mul(player.aq.energy, getDupEssenceCostDiv());
+    if (Decimal.lt(e, 1e22)) return new Decimal(0);
+
+    let targ = Decimal.div(e, 1e22).max(1).log(1.1).root(1.2);
+    if (targ.gte(80)) targ = targ.times(20).sqrt();
+    return targ.times(tmp.dup.depthEff).plus(1).floor();
 }
 
 function getDupEssenceCostPM() {
-    let ess = player.dup.totalEssencePM;
+    let ess = Decimal.div(player.dup.totalEssencePM, tmp.dup.depthEff);
     if (ess.gte(50)) ess = ess.pow(2).div(45);
-    return Decimal.pow("1e10", Decimal.pow(ess, 1.2)).times("1e3600");
+    return Decimal.pow("1e10", Decimal.pow(ess, 1.2)).times("1e3600").div(getDupEssenceCostDiv());
+}
+function getDupEssenceTargetPM() {
+    const m = Decimal.mul(player.photons.matter, getDupEssenceCostDiv());
+    if (Decimal.lt(m, "1e3600")) return new Decimal(0);
+
+    let targ = Decimal.div(m, "1e3600").max(1).log("1e10").root(1.2);
+    if (targ.gte(2500/45)) targ = targ.times(45).sqrt();
+    return targ.times(tmp.dup.depthEff).plus(1).floor();
 }
 
 function getDupBase() {
-    return new Decimal(2);
+    return Decimal.root(2, tmp.dup.depthNerf);
 }
 
 function getDupHaltStart() {
@@ -91,6 +121,7 @@ function getDupHaltStart() {
 function getDupSpeed() {
     let speed = new Decimal(0.1);
     if (hasAQUpg(55)) speed = speed.times(AQUpgEff(55));
+    if (hasDupUnl(2)) speed = speed.times(Decimal.div(player.dup.essence, 2).plus(1).sqrt());
     return speed;
 }
 
@@ -153,4 +184,46 @@ function hasDupEff(id) {
 }
 function hasDupUnl(id) {
     return player.dup.unlocks.includes(id);
+}
+
+function getDupDepthEff() {
+    return Decimal.div(player.dup.depths, 3).plus(1)
+}
+function getDupDepthNerf() {
+    return Decimal.div(player.dup.depths, 5).plus(1)
+}
+function getDupDepthReq() {
+    return Decimal.pow("5e12", Decimal.pow(player.dup.depths, 1.6)).times("1e45")
+}
+
+function dupDepth(force = false) {
+    updateTempDup()
+
+    if (!force) {
+        if (Decimal.lt(tmp.dup.amount, tmp.dup.dupReq) || !hasDupUnl(2)) return;
+
+        player.dup.depths = Decimal.add(player.dup.depths, 1);
+    }
+    
+    player.aq.energy = new Decimal(0);
+    player.dup.essence = new Decimal(0);
+    player.dup.totalEssence = new Decimal(0);
+    player.dup.totalEssencePM = new Decimal(0);
+    player.dup.time = new Decimal(0);
+    player.dup.effects = [];
+    ultrawaveReset(true);
+}
+
+function maxAllDupEssence() {
+    if (Decimal.lt(player.dup.depths, 1)) return;
+
+    const bulkAQ = Decimal.sub(getDupEssenceTarget(), player.dup.totalEssence).max(0);
+    player.dup.essence = player.dup.essence.plus(bulkAQ);
+    player.dup.totalEssence = player.dup.totalEssence.plus(bulkAQ);
+
+    if (hasDupUnl(1)) {
+        const bulkPM = Decimal.sub(getDupEssenceTargetPM(), player.dup.totalEssencePM).max(0);
+        player.dup.essence = player.dup.essence.plus(bulkPM);
+        player.dup.totalEssencePM = player.dup.totalEssencePM.plus(bulkPM);
+    }
 }

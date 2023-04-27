@@ -7,6 +7,7 @@ var tabData = {
     qk: "Quarks",
     anh: "Upgrades",
     ph: "Photons",
+    dup: "Duplicators"
 }
 var importInput;
 var storageName = "UErewritten";
@@ -33,6 +34,10 @@ const tabs = {
     ph: {
         Photons() { return hasAQUpg(43) },
         Ultrawaves() { return hasAQUpg(43) },
+    },
+    dup: {
+        Duplicators() { return hasDupUnl(2) },
+        "Dupli-Depths"() { return hasDupUnl(2) }
     }
 }
 
@@ -205,7 +210,9 @@ function loadVue() {
             buyAQCharge,
             getHadronicBoostMag,
             getVoidUpgMaxTier,
-            buyDupEssencePM
+            buyDupEssencePM,
+            dupDepth,
+            maxAllDupEssence
         },
     })
 }

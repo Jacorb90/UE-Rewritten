@@ -182,10 +182,15 @@ function updateTempAQ() {
 function updateTempDup() {
     tmp.dup = {};
 
+    tmp.dup.dupReq = getDupDepthReq();
+    tmp.dup.depthEff = getDupDepthEff();
+    tmp.dup.depthNerf = getDupDepthNerf();
+
     tmp.dup.speed = getDupSpeed();
     tmp.dup.base = getDupBase();
     tmp.dup.haltStart = getDupHaltStart();
     tmp.dup.amount = getDuplicators();
+
     tmp.dup.essenceCost = getDupEssenceCost();
     tmp.dup.essenceCostPM = getDupEssenceCostPM();
 
