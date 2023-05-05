@@ -195,6 +195,7 @@ function getUniverseEssenceGainMult() {
     if (hasAnhUpg(11)) mult = mult.times(tmp.anh.upgs[11].eff);
     if (player.void.unl) mult = mult.times(tmp.void.upgs[1].eff);
     if (hasAQUpg(32)) mult = mult.times(AQUpgEff(32));
+    if (hasDupUnl(3)) mult = mult.times(tmp.bat[1].eff[8]);
     return mult;
 }
 

@@ -37,6 +37,13 @@ const dup_effects = [
         desc: "Duplicators divide Duplicator Essence costs.",
         effect() { return tmp.dup.amount.max(1) },
         effSymbol: "/"
+    },
+    {
+        unl() { return hasDupUnl(3) && Decimal.gte(tmp.bat[1].boosts, 6) },
+        req: new Decimal("1e105"),
+        desc: "Duplicators divide Photon & Void Rebuyable Upgrade costs & Dupli-Depth requirement.",
+        effect() { return tmp.dup.amount.max(1) },
+        effSymbol: "/"
     }
 ]
 const dup_unlocks = [
@@ -54,6 +61,11 @@ const dup_unlocks = [
         unl() { return hasDupUnl(1) },
         req: new Decimal("1e45"),
         desc: "Unlock Dupli-Depths, and consume Duplicator Essence faster based on its amount."
+    },
+    {
+        unl() { return hasDupUnl(2) },
+        req: new Decimal("3e93"),
+        desc: "Unlock Batteries, and you can max all Void Rebuyable Upgrades.",
     }
 ]
 
@@ -81,9 +93,14 @@ function getDupEssenceCostDiv() {
     if (hasDupEff(5)) d = d.mul(tmp?.dup?.eff?.[5] ?? dup_effects[5].effect())
     return d;
 }
+function getDupEssenceCostReduction() {
+    let r = new Decimal(1);
+    if (hasDupUnl(3)) r = r.div(tmp.bat[1].eff[1]);
+    return r;
+}
 
 function getDupEssenceCost() {
-    let ess = Decimal.div(player.dup.totalEssence, tmp.dup.depthEff);
+    let ess = Decimal.div(player.dup.totalEssence, tmp.dup.depthEff).div(getDupEssenceCostReduction());
     if (ess.gte(40)) ess = ess.pow(2).div(20);
     return Decimal.pow(1.1, Decimal.pow(ess, 1.2)).times(1e22).div(getDupEssenceCostDiv());
 }
@@ -93,11 +110,11 @@ function getDupEssenceTarget() {
 
     let targ = Decimal.div(e, 1e22).max(1).log(1.1).root(1.2);
     if (targ.gte(80)) targ = targ.times(20).sqrt();
-    return targ.times(tmp.dup.depthEff).plus(1).floor();
+    return targ.times(tmp.dup.depthEff).times(getDupEssenceCostReduction()).plus(1).floor();
 }
 
 function getDupEssenceCostPM() {
-    let ess = Decimal.div(player.dup.totalEssencePM, tmp.dup.depthEff);
+    let ess = Decimal.div(player.dup.totalEssencePM, tmp.dup.depthEff).div(getDupEssenceCostReduction());
     if (ess.gte(50)) ess = ess.pow(2).div(45);
     return Decimal.pow("1e10", Decimal.pow(ess, 1.2)).times("1e3600").div(getDupEssenceCostDiv());
 }
@@ -107,7 +124,7 @@ function getDupEssenceTargetPM() {
 
     let targ = Decimal.div(m, "1e3600").max(1).log("1e10").root(1.2);
     if (targ.gte(2500/45)) targ = targ.times(45).sqrt();
-    return targ.times(tmp.dup.depthEff).plus(1).floor();
+    return targ.times(tmp.dup.depthEff).times(getDupEssenceCostReduction()).plus(1).floor();
 }
 
 function getDupBase() {
@@ -115,7 +132,7 @@ function getDupBase() {
 }
 
 function getDupHaltStart() {
-    return new Decimal("1.8e308");
+    return new Decimal("1e10000000");
 }
 
 function getDupSpeed() {
@@ -180,10 +197,10 @@ function dupLoop(diff) {
 }
 
 function hasDupEff(id) {
-    return player.dup.effects.includes(id);
+    return player.dup.effects.includes(id) && dup_effects[id].unl();
 }
 function hasDupUnl(id) {
-    return player.dup.unlocks.includes(id);
+    return player.dup.unlocks.includes(id) && dup_unlocks[id].unl();
 }
 
 function getDupDepthEff() {
@@ -192,8 +209,15 @@ function getDupDepthEff() {
 function getDupDepthNerf() {
     return Decimal.div(player.dup.depths, 5).plus(1)
 }
+
+function getDupDepthReqDiv() {
+    let div = new Decimal(1);
+    if (hasDupUnl(3)) div = div.mul(tmp.bat[1].eff[6]);
+    if (hasDupEff(6)) div = div.mul(tmp.dup.eff[6]);
+    return div;
+}
 function getDupDepthReq() {
-    return Decimal.pow("5e12", Decimal.pow(player.dup.depths, 1.6)).times("1e45")
+    return Decimal.pow("5e12", Decimal.pow(player.dup.depths, 1.6)).times("1e45").div(getDupDepthReqDiv());
 }
 
 function dupDepth(force = false) {

@@ -25,6 +25,7 @@ function gameLoop(diff) {
     if (player.photons.unl) photonLoop(diff);
     if (player.aq.unl) AQLoop(diff);
     if (player.dup.unl) dupLoop(diff);
+    if (hasDupUnl(3)) batLoop(diff);
 }
 
 function getSize(time) {

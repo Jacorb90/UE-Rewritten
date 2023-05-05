@@ -695,3 +695,64 @@ tr, .tableRow {
     color: rgb(189, 255, 232);
     text-shadow: 0.1em 0.1em 0.2em rgb(69, 255, 243), 0.2em 0.2em 0.4em rgb(77, 255, 216);
 }
+
+.batteries.unlocked {
+    color: rgb(0, 0, 0);
+    background: linear-gradient(180deg, rgb(255, 251, 0) 75%, hsl(59, 0%, 50%));
+    border: 2px solid rgb(255, 255, 255);
+    padding: 5px 5px 5px 5px;
+}
+
+.batteries.locked {
+    color: white;
+    background: linear-gradient(180deg, hsl(59, 60%, 30%) 75%, hsl(59, 0%, 20%));
+    border: 2px solid rgba(255, 0, 0, 0.5);
+    padding: 5px 5px 5px 5px;
+}
+.batteries.locked:hover {
+    filter: sepia(100%) saturate(300%) brightness(70%) hue-rotate(-45deg);
+}
+
+.batteries.shadow {
+    color: rgb(255, 253, 205);
+    text-shadow: 0.166667em 0.166667em 0.3333333em rgb(179, 179, 41), 0.3333333em 0.3333333em 0.66666667em rgb(173, 173, 43);
+}
+
+
+.batteryDiv {
+    width: 20em;
+    height: 12em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid rgba(0,0,0,0.5);
+    color: black;
+}
+.batteryDiv.active {
+    background-color: #ffd900;
+}
+.batteryDiv.active.even {
+    background-color: orange;
+}
+.batteryDiv:not(.active) {
+    background-color: hsl(0, 0%, 64%);
+}
+
+.batteryDiv.top {
+    border-top-left-radius: 25%;
+    border-top-right-radius: 25%;
+}
+.batteryDiv.bottom {
+    border-bottom-left-radius: 25%;
+    border-bottom-right-radius: 25%;
+}
+
+.batteryTD {
+    background-color: #2d3a00;
+    border: 5px solid rgb(54, 55, 0);
+    padding: 2em;
+}
+
+.batteryDiv.active .batteries.shadow {
+    filter: invert(100%);
+}

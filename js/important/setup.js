@@ -20,7 +20,8 @@ const tabs = {
         Hadrons() { return player.hadrons.unl },
         Annihilation() { return player.depth.gte(anhBaseReq)||player.annihilation.reached },
         Photons() { return player.photons.unl },
-        Duplicators() { return player.dup.unl }
+        Duplicators() { return player.dup.unl },
+        Batteries() { return hasDupUnl(3) }
     },
     qk: {
         Quarks() { return player.aq.unl },
@@ -64,7 +65,8 @@ function startPlayer() { return {
     void: playerVoidData(),
     photons: playerPhotonsData(),
     aq: playerAQData(),
-    dup: playerDupData()
+    dup: playerDupData(),
+    bat: playerBatData()
 }}
 
 function save() {
@@ -212,7 +214,11 @@ function loadVue() {
             getVoidUpgMaxTier,
             buyDupEssencePM,
             dupDepth,
-            maxAllDupEssence
+            maxAllDupEssence,
+            getBatBoostNextReq,
+            battery_data,
+            investFluid,
+            maxAllVoidRepUpgs
         },
     })
 }

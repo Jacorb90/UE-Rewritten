@@ -175,21 +175,27 @@ function getPhotonGain(x) {
 function getPhotonGainMult() {
     let mult = new Decimal(1);
     if (hasDupEff(2)) mult = mult.times(tmp.dup.eff[2]);
+    if (hasDupUnl(3)) mult = mult.times(tmp.bat[1].eff[7]);
     return mult;
+}
+
+function getPhotonGenCostDiv(x) {
+    let div = new Decimal(1);
+    if (hasAQUpg(22)) div = div.times(AQUpgEff(22));
+    if (hasDupEff(6)) div = div.times(tmp.dup.eff[6]);
+    return div;
 }
 
 function getPhotonGenCost(x) {
     let data = photon_data[x];
     let l = player.photons.colors[x].gen;
-    let cost = data.genCostStart.times(data.genCostBase.pow(l.pow(data.genCostExp||1)));
-    if (hasAQUpg(22)) cost = cost.div(AQUpgEff(22));
+    let cost = data.genCostStart.times(data.genCostBase.pow(l.pow(data.genCostExp||1))).div(getPhotonGenCostDiv(x));
     return cost;
 }
 
 function getPhotonGenTarg(x) {
     let data = photon_data[x];
-    let r = player.photons.matter;
-    if (hasAQUpg(22)) r = r.times(AQUpgEff(22));
+    let r = player.photons.matter.times(getPhotonGenCostDiv(x));
 
     if (r.lt(data.genCostStart)) return new Decimal(0);
     return r.div(data.genCostStart).max(1).log(data.genCostBase).root(data.genCostExp||1).plus(1).floor()
@@ -204,11 +210,17 @@ function buyPhotonGen(x, auto=false) {
     player.photons.colors[x].gen = player.photons.colors[x].gen.plus(1);
 }
 
+function getPhotonGenEffExp(x) {
+    let exp = new Decimal(1);
+    if (tmp.anh && hasAnhUpg(36)) exp = exp.mul(tmp.anh.upgs[36].eff.exp);
+    if (x<(hasAQUpg(44)?7:6) && hasAQUpg(43)) exp = exp.mul(tmp.ph.uw[3]);
+    if (hasDupUnl(3)) exp = exp.plus(tmp.bat[1].eff[2]);
+    return exp;
+}
 function getPhotonGenEff(x) {
     let eff = player.photons.colors[x].gen.div((x+1)*10);
-    if (tmp.anh && hasAnhUpg(36)) eff = eff.times(tmp.anh.upgs[36].eff.mul).pow(tmp.anh.upgs[36].eff.exp)
-    if (x<(hasAQUpg(44)?7:6) && hasAQUpg(43)) eff = eff.pow(tmp.ph.uw[3]);
-    return eff;
+    if (tmp.anh && hasAnhUpg(36)) eff = eff.times(tmp.anh.upgs[36].eff.mul);
+    return eff.pow(getPhotonGenEffExp(x));
 }
 
 function maxAllPhotonGens() {
@@ -228,6 +240,7 @@ function getUltrawaveGainMult() {
 function getUltrawaveCostDiv() {
     let div = new Decimal(1);
     if (hasDupEff(4)) div = div.times(tmp.dup.eff[4]);
+    if (hasDupUnl(3)) div = div.times(tmp.bat[1].eff[5]);
     return div;
 }
 function getUltrawaveGain() {

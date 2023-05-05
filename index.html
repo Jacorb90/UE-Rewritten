@@ -18,6 +18,7 @@
     <script type="text/javascript" src="js/gameplay/photons.js"></script>
     <script type="text/javascript" src="js/gameplay/antiquarks.js"></script>
     <script type="text/javascript" src="js/gameplay/duplicators.js"></script>
+    <script type="text/javascript" src="js/gameplay/batteries.js"></script>
 </head>
 <body onload="loadGame()">
 	<div id="app">
@@ -161,6 +162,7 @@
                         You have <b class="void shadow">{{format(player.void.fabric)}}</b> Space-Time Fabric <span v-if="player.void.active||hasAQUpg(33)">(+{{format(tmp.void.stGain.times(player.void.active?1:tmp.ph.col[6].eff.eff))}}/s)</span><br><br>
                         <div style="font-size: 11px; margin-bottom: 5px;">In the Void, all Universal Upgrades are disabled, and Annihilation Upgrades are replaced by Void Upgrades.<br>Space-Time Fabric is gained based on your Universe's size, but slows down over time since last Dimensional Depth<br><br></div>
                         <button class="voidReset void unlocked" onclick="enterVoid()">{{player.void.active?"Exit":"Enter"}} the Void.</button><br><br>
+                        <button class="void unlocked" v-if="hasDupUnl(3)" v-on:click="maxAllVoidRepUpgs()">Max All</button><br/>
                         <table>
                             <tr v-for="x in void_rep_upgs.amt"><td><button v-bind:class="{ void: true, unlocked: player.void.fabric.gte(tmp.void.upgs[x].cost), locked: player.void.fabric.lt(tmp.void.upgs[x].cost) }" v-on:click="buyVoidRepUpg(x)" style="width: 500px;"><b style="font-size: 20px;" class="void text">{{void_rep_upgs[x].title}}<br></b>{{void_rep_upgs[x].desc}}<br>Cost: <b class="void text">{{format(tmp.void.upgs[x].cost)}}</b> Space-Time Fabric<br><br>Level: <b class="void text">{{formatWhole(tmp.void.upgs[x].lvl)+(tmp.void.upgs.extra.gt(0)?(" + "+format(tmp.void.upgs.extra)):"")}}</b><br>Currently: <b class="void text">{{void_rep_upgs[x].dispEff(tmp.void.upgs[x].eff)}}</b></button></td></tr>
                         </table>
@@ -240,6 +242,26 @@
                     You have completed <b class="duplicators shadow">{{formatWhole(player.dup.depths)}}</b> Dupli-Depths, which reduce Duplicator Essence costs by <b class="duplicators shadow">{{format(Decimal.sub(1, Decimal.div(1, tmp.dup.depthEff)).times(100))}}%</b>, but reduces the Duplicator base by <b class="duplicators shadow">{{format(Decimal.sub(1, Decimal.div(1, tmp.dup.depthNerf)).times(100))}}%</b>.<br/><br/>
                     <button v-bind:class="{duplicators: true, unlocked: tmp.dup.amount.gte(tmp.dup.dupReq), locked: tmp.dup.amount.lt(tmp.dup.dupReq)}" onclick="dupDepth()">Reach <b class="normal shadow">{{format(tmp.dup.dupReq, 3)}} Duplicators</b> to delve into Dupli-Depth <b class="duplicators shadow">{{formatWhole(Decimal.add(player.dup.depths, 1))}}</b><br/><br/>Forces an Ultrawave reset, and resets Anti-Quark Energy & Duplicators.</button><br><br>
                 </div>
+            </div>
+            <div v-if="tabData.normal=='Batteries'">
+                You have <b class="batteries shadow" style="font-size: 25px;">{{format(player.bat.fluid)}}</b> Battery Fluid <b class="batteries shadow">(+{{format(tmp.bat.gain)}}/s)</b>
+                <br/><br/>
+                <table>
+                    <tr>
+                        <td v-for="(bData, b) in battery_data" class="batteryTD" v-if="bData.unl()">
+                            <h2>Battery {{b}}</h2>
+                            <button v-bind:class="{ batteries: true, unlocked: Decimal.gte(player.bat.fluid, bData.convCost()), locked: Decimal.lt(player.bat.fluid, bData.convCost()) }" v-on:click="investFluid(b)"><b class="shadow">Invest Battery Fluid</b><br/><i>(Conversion Cost: <b>{{format(bData.convCost())}}</b>)</i></button><br/><br/>
+                            <b class="batteries shadow">{{format(player.bat.batteries[b])}}</b> Inserted Fluid (-{{format((1 - tmp.bat[b].loss) * 100)}}%/s)<br/><br/>
+                            <div v-for="i in bData.numBoosts" v-bind:class="{ batteryDiv: true, active: Decimal.gte(tmp.bat[b].stacks[i], 1), even: Decimal.sub(tmp.bat[b].stacks[i], Decimal.div(tmp.bat[b].stacks[i], 2).floor().times(2)).eq(0), top: i == 1, bottom: i == bData.numBoosts}">
+                                <div>
+                                    <b class="batteries shadow">Boost {{i}} [{{formatWhole(tmp.bat[b].stacks[i])}}]</b><br/><br/>
+                                    {{battery_data[b].boostDescs[i]()}}<br/><br/>
+                                    Next: <b>{{formatWhole(getBatBoostNextReq(b,i))}}</b> Fluid
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
             </div>
         </div>
     </div> 

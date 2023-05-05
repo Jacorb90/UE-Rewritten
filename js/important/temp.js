@@ -1,4 +1,5 @@
 function updateTemp() {
+    updateTempBat();
     updateTempDup();
     updateTempAQ();
     updateTempPhotons();
@@ -182,7 +183,6 @@ function updateTempAQ() {
 function updateTempDup() {
     tmp.dup = {};
 
-    tmp.dup.dupReq = getDupDepthReq();
     tmp.dup.depthEff = getDupDepthEff();
     tmp.dup.depthNerf = getDupDepthNerf();
 
@@ -195,4 +195,28 @@ function updateTempDup() {
     tmp.dup.essenceCostPM = getDupEssenceCostPM();
 
     tmp.dup.eff = dup_effects.map(obj => obj.effect());
+
+    tmp.dup.dupReq = getDupDepthReq();
+}
+
+function updateTempBat() {
+    tmp.bat = {};
+
+    for (let b=1; b<=total_batteries; b++) {
+        tmp.bat[b] = {
+            boosts: getBatBoosts(b),
+            loss: battery_data[b].loss(),
+            stacks: {},
+            base: {},
+            eff: {}
+        };
+        
+        for (let i=1; i<=battery_data[b].numBoosts; i++) {
+            tmp.bat[b].stacks[i] = getBatStacks(b, i);
+            tmp.bat[b].base[i] = battery_data[b].boostBases[i]();
+            tmp.bat[b].eff[i] = battery_data[b].boostEffects[i]();
+        }
+    }
+
+    tmp.bat.gain = getBatFluidGain();
 }

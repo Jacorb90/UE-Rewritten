@@ -34,13 +34,14 @@ function getAQEffRoot(type) {
 function getGlobalAQGainMult() {
     let mult = new Decimal(1);
     if (hasAQUpg(11)) mult = mult.times(AQUpgEff(11));
+    if (hasDupEff(3)) mult = mult.times(tmp.dup.eff[3]);
+    if (hasDupUnl(3)) mult = mult.mul(tmp.bat[1].eff[4]);
     return mult;
 }
 
 function getAQGain(type) {
     if (!player.aq.unl) return new Decimal(0);
     let gain = Decimal.div(1, tmp.aq.eff["anti"+quark_types[(quark_types.indexOf(type)+2)%quark_types.length]]);
-    if (hasDupEff(3)) gain = gain.times(tmp.dup.eff[3]);
     return gain;
 }
 
@@ -82,6 +83,7 @@ function getAQEnergyGain() {
     if (hasAQUpg(11)) gain = gain.times(AQUpgEff(11));
     if (hasAQUpg(21)) gain = gain.times(tmp.aq.gluon.eff);
     if (hasDupEff(3)) gain = gain.times(tmp.dup.eff[3]);
+    if (hasDupUnl(3)) gain = gain.mul(tmp.bat[1].eff[4]);
     return gain;
 }
 
