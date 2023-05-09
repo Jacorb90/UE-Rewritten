@@ -64,11 +64,13 @@ function getBatFluidGain() {
 function batLoop(diff) {
     if (!hasDupUnl(3)) return;
 
-    player.bat.fluid = player.bat.fluid.plus(tmp.bat.gain.times(diff));
-
     for (let i=1; i<=total_batteries; i++) {
         player.bat.batteries[i] = Decimal.mul(player.bat.batteries[i], Decimal.pow(tmp.bat[i].loss, diff));
     }
+
+    if (diff>=1) updateTempBat();
+
+    player.bat.fluid = player.bat.fluid.plus(tmp.bat.gain.times(diff));
 }
 
 function getBatBoostNextReq(bIndex, i) {

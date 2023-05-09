@@ -83,8 +83,21 @@ function loadGame() {
 
     updateTemp();
     updateTemp();
+    updateTemp();
 
     loadVue();
+
+    intervals.loop = setInterval(function() {
+        if (!player) return;
+    
+        let time = new Date().getTime()
+        gameLoop(player.offtime?((time - player.lastTime)/1000):.02);
+        player.lastTime = time;
+    }, 50)
+    
+    intervals.autosave = setInterval(function() {
+        if (player && !(!player.autosave)) save();
+    }, 5000)
 }
 
 function fixObj(obj, start) {
