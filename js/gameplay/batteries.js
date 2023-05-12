@@ -140,7 +140,7 @@ function getBatBoosts(bIndex) {
 
     const b = bData.numBoosts;
 
-    const x = Decimal.div(player.bat.batteries[bIndex], bData.base).log(bData.sp);
+    const x = Decimal.div(player.bat.batteries[bIndex], bData.base).log(bData.sp).plus(1);
 
     const n = Decimal.div(x, b).times(8).plus(1).sqrt().sub(1).div(2);
 
