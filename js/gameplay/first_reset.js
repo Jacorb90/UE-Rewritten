@@ -151,6 +151,7 @@ function divPrestigeReq() {
     let div = new Decimal(1);
     if (voidUpgActive(11)) div = div.times(tmp.anh.upgs[11].voidEff);
     if (hasDupEff(4)) div = div.times(tmp.dup.eff[4]);
+    if (hasDupUnl(3) && player.bat.bestBatteriesUnl >= 2) div = div.times(tmp.bat[2].eff[2]);
     return div;
 }
 function getPrestigeReqBase() {
@@ -257,6 +258,8 @@ function maxAllUniUpgs(auto=false) {
 
 function adjustUniUpgCost(x, rev=false) {
     if (rev) {
+        if (hasDupUnl(3) && player.bat.bestBatteriesUnl >= 2) x = x.times(tmp.bat[2].eff[1]);
+
         if (hasAnhUpg(34) && player.aq.unl) x = x.times(tmp.anh.upgs[34].eff)
 
         if (x.gte(250)) x = x.plus(375).times(100).sqrt()
@@ -266,6 +269,8 @@ function adjustUniUpgCost(x, rev=false) {
         if (x.gte(250)) x = x.pow(2).div(100).sub(375)
 
         if (hasAnhUpg(34)) x = x.div(tmp.anh.upgs[34].eff)
+
+        if (hasDupUnl(3) && player.bat.bestBatteriesUnl >= 2) x = x.div(tmp.bat[2].eff[1]);
     }
     return x;
 }

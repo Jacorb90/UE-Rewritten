@@ -12,6 +12,7 @@ function playerAnnihilationData() { return {
 function getAnhGainExp() {
     let exp = new Decimal(1);
     if (player.photons.unl) exp = exp.plus(tmp.ph.col[0].eff.eff);
+    if (hasDupUnl(3) && player.bat.bestBatteriesUnl >= 2) exp = exp.plus(tmp.bat[2].eff[3]);
     return exp;
 }
 function getAnhGainMult() {
@@ -70,7 +71,7 @@ function getAnhBoostPow() {
 function getAnhBoostEff(x) {
     let power = tmp.anh.boosts.power;
     
-    if (x==1) return player.depth.plus(1).log10().times(power).sqrt();
+    if (x==1) return player.depth.plus(1).log10().times(hasAnhUpg(44) ? player.aq.charge.plus(1) : 1).times(power).root(hasAnhUpg(44) ? 1 : 2);
     else if (x==2) return player.annihilation.energy.plus(1).log10().times(power).plus(1).cbrt();
     else return tmp.upgs?tmp.upgs.totalLvl.plus(1).log10().div(2).times(power).root(4):new Decimal(0)
 }
@@ -87,7 +88,7 @@ function toggleAnhBoost(x) {
 }
 
 const annihilation_upgs = {
-    rows: 3,
+    rows: 4,
     cols: 6,
     11: {
         unl() { return player.annihilation.reached },
@@ -268,13 +269,51 @@ const annihilation_upgs = {
         voidEff() { return Decimal.pow(2, player.photons.matter.plus(1).log2().root(getVoidUpgTier(36)>2?1.5:2).div(2).times(getVoidUpgTier(36)>2?1.5:1).times((hasAnhUpg(31, true)&&player.void.active&&!annihilation_upgs[31].keepVoid&&getVoidUpgTier(36)>1)?1.25:1)) },
         voidDispEff(e) { return format(e)+"x" },
     },
+    41: {
+        unl() { return hasDupUnl(3) && player.bat.bestBatteriesUnl >= 2 && Decimal.gte(tmp.bat[2].boosts, 3) },
+        desc: "Automate Void Rebuyable Upgrades, which are 5% stronger.",
+        cost: new Decimal("1e20000"),
+        keepVoid: true
+    },
+    42: {
+        unl() { return hasDupUnl(3) && player.bat.bestBatteriesUnl >= 2 && Decimal.gte(tmp.bat[2].boosts, 3) },
+        desc: "Triple Duplicator speed & increase Duplicator multiplier by 10% (forces Dupli-Depth reset)",
+        cost: new Decimal("1e26500"),
+        keepVoid: true
+    },
+    43: {
+        unl() { return hasDupUnl(3) && player.bat.bestBatteriesUnl >= 2 && Decimal.gte(tmp.bat[2].boosts, 3) },
+        desc: "Automate Wave Accelerators, which are 10% stronger.",
+        cost: new Decimal("1e30888"),
+        keepVoid: true
+    },
+    44: {
+        unl() { return hasDupUnl(3) && player.bat.bestBatteriesUnl >= 2 && Decimal.gte(tmp.bat[2].boosts, 3) },
+        desc: "Bought Antiquark Charge adds Quark Charge & Annihilation Boost 1 base.",
+        cost: new Decimal("1e35500"),
+        keepVoid: true
+    },
+    45: {
+        unl() { return hasDupUnl(3) && player.bat.bestBatteriesUnl >= 2 && Decimal.gte(tmp.bat[2].boosts, 3) },
+        desc: "Automate Photon Generators, and all Photon effects are 5% stronger.",
+        cost: new Decimal("1e37350"),
+        keepVoid: true
+    },
+    46: {
+        unl() { return hasDupUnl(3) && player.bat.bestBatteriesUnl >= 2 && Decimal.gte(tmp.bat[2].boosts, 3) },
+        desc: "Boost Battery Fluid gain based on Annihilation Energy.",
+        cost: new Decimal("1e42275"),
+        eff() { return Decimal.add(player.annihilation.energy, 1).log10().div(1e3).plus(1).sqrt() },
+        dispEff(e) { return format(e) + "x" },
+        keepVoid: true
+    }
 }
 
 const void_anh_upgs = Object.keys(annihilation_upgs).filter(x => (x!="rows"&&x!="cols")&&!annihilation_upgs[x].keepVoid)
 const void_anh_upg_rows = Math.ceil(void_anh_upgs.length/6)
 
 function hasAnhUpg(id, noVoidSwitchCheck=false) { 
-    return player.annihilation.upgs.includes(id) && (tmp.anh.upgs && (noVoidSwitchCheck||(!tmp.anh.upgs[id].voidSwitch))) 
+    return player.annihilation.upgs.includes(id) && (tmp.anh?.upgs && (noVoidSwitchCheck||(!tmp.anh.upgs[id].voidSwitch))) 
 };
 
 function buyAnnihilationUpg(id) {
@@ -300,6 +339,9 @@ function buyAnnihilationUpg(id) {
         if (id==16) {
             player.essence = player.essence.plus(player.spentEssence)
             player.spentEssence = new Decimal(0)
+        }
+        if (id==42) {
+            dupDepth(true);
         }
     }
 }

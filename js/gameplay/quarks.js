@@ -106,7 +106,7 @@ function getQuarkEffExp(type) {
 }
 
 function getQuarkChargeEff() {
-    let eff = player.quarks.charge.div(10);
+    let eff = player.quarks.charge.plus(hasAnhUpg(44) ? player.aq.charge : 0).div(10);
     if (voidUpgActive(34)) eff = eff.times(getVoidUpgTier(34)>2?3:((hasAnhUpg(31)&&getVoidUpgTier(34)>1)?2.5:2));
     return eff.plus(1);
 }

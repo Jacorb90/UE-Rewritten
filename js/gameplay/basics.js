@@ -85,5 +85,6 @@ function getUniverseCompactionStart() {
     if (player.hadrons.unl) start = start.times(tmp.had.eff);
     if (hasAnhUpg(25)) start = start.times(2);
     if (hasAQUpg(53)) start = start.times(AQUpgEff(53))
+    if (hasDupUnl(3) && player.bat.bestBatteriesUnl >= 2) start = start.times(tmp.bat[2].eff[9]);
     return start;
 }

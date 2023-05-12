@@ -131,7 +131,11 @@ function updateTempPhotons() {
     tmp.ph.uwt = getTotalUltrawaves();
     tmp.ph.uwp = getWaveAccelPower();
     tmp.ph.uw = {};
-    for (let i=1;i<=3;i++) tmp.ph.uw[i] = getWaveAccelEff(i);
+    tmp.ph.uwe = {};
+    for (let i=1;i<=3;i++) {
+        tmp.ph.uwe[i] = getExtraWaveAccels(i);
+        tmp.ph.uw[i] = getWaveAccelEff(i);
+    }
     tmp.ph.phMul = getPhotonGainMult();
     tmp.ph.col = {};
     for (let id=photon_data.length-1;id>=0;id--) {
@@ -186,6 +190,8 @@ function updateTempDup() {
     tmp.dup.depthEff = getDupDepthEff();
     tmp.dup.depthNerf = getDupDepthNerf();
 
+    tmp.dup.effMult = dupEffMult();
+
     tmp.dup.speed = getDupSpeed();
     tmp.dup.base = getDupBase();
     tmp.dup.haltStart = getDupHaltStart();
@@ -194,7 +200,7 @@ function updateTempDup() {
     tmp.dup.essenceCost = getDupEssenceCost();
     tmp.dup.essenceCostPM = getDupEssenceCostPM();
 
-    tmp.dup.eff = dup_effects.map(obj => obj.effect());
+    tmp.dup.eff = dup_effects.map(obj => obj.effect().times(tmp.dup.effMult));
 
     tmp.dup.dupReq = getDupDepthReq();
 }
@@ -202,17 +208,21 @@ function updateTempDup() {
 function updateTempBat() {
     tmp.bat = {};
 
-    for (let b=1; b<=total_batteries; b++) {
+    for (let b=total_batteries; b>=1; b--) {
         tmp.bat[b] = {
             boosts: getBatBoosts(b),
             loss: battery_data[b].loss(),
             stacks: {},
+            extraStacks: {},
+            tStacks: {},
             base: {},
             eff: {}
         };
         
         for (let i=1; i<=battery_data[b].numBoosts; i++) {
             tmp.bat[b].stacks[i] = getBatStacks(b, i);
+            tmp.bat[b].extraStacks[i] = getExtraBatStacks(b, i);
+            tmp.bat[b].tStacks[i] = tmp.bat[b].stacks[i].plus(tmp.bat[b].extraStacks[i]);
             tmp.bat[b].base[i] = battery_data[b].boostBases[i]();
             tmp.bat[b].eff[i] = battery_data[b].boostEffects[i]();
         }

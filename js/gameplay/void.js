@@ -6,6 +6,7 @@ function playerVoidData() { return {
     upgs: {},
     fabric: new Decimal(0),
     repUpgs: {},
+    repAuto: false
 }}
 
 function canUnlockVoid() { return player.depth.gte(voidReqs[0]) && player.annihilation.energy.gte(voidReqs[1]) };
@@ -57,6 +58,10 @@ function getVoidUpgMaxTier() {
 function voidLoop(diff) {
     if (!player.void.active) player.void.fabric = player.void.fabric.plus(tmp.void.stGain.times(tmp.ph.col[6].eff.eff).times(diff));
     else player.void.fabric = player.void.fabric.plus(tmp.void.stGain.times(diff));
+
+    if (hasAnhUpg(41) && player.void.repAuto) {
+        maxAllVoidRepUpgs(true);
+    }
 }
 
 const void_rep_upgs = {
@@ -98,6 +103,8 @@ function getVoidRepUpgPower() {
     let power = new Decimal(1);
     if (voidUpgActive(32)) power = power.times(getVoidUpgTier(32)>2?1.32:((hasAnhUpg(31)&&getVoidUpgTier(32)>1)?1.25:1.2))
     if (hasAQUpg(41)) power = power.times(AQUpgEff(41));
+    if (hasAnhUpg(41)) power = power.times(1.05);
+    if (hasDupUnl(3) && player.bat.bestBatteriesUnl >= 2) power = power.times(tmp.bat[2].eff[6].plus(1));
     return power;
 }
 

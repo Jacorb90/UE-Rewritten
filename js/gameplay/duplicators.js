@@ -69,6 +69,12 @@ const dup_unlocks = [
     }
 ]
 
+function dupEffMult() {
+    let mult = new Decimal(1);
+    if (hasDupUnl(3) && player.bat.bestBatteriesUnl >= 2) mult = mult.times(tmp.bat[2].eff[2]);
+    return mult;
+}
+
 function playerDupData() { return {
     unl: false,
     essence: new Decimal(0),
@@ -127,23 +133,28 @@ function getDupEssenceTargetPM() {
     return targ.times(tmp.dup.depthEff).times(getDupEssenceCostReduction()).plus(1).floor();
 }
 
+function getDupBaseBase() {
+    return hasAnhUpg(42) ? 2.02 : 2
+}
 function getDupBase() {
-    return Decimal.root(2, tmp.dup.depthNerf);
+    return Decimal.root(getDupBaseBase(), tmp.dup.depthNerf);
 }
 
 function getDupHaltStart() {
-    return new Decimal("1e10000000");
+    return new Decimal("1e250");
 }
 
 function getDupSpeed() {
     let speed = new Decimal(0.1);
     if (hasAQUpg(55)) speed = speed.times(AQUpgEff(55));
     if (hasDupUnl(2)) speed = speed.times(Decimal.div(player.dup.essence, 2).plus(1).sqrt());
+    if (hasDupUnl(3) && player.bat.bestBatteriesUnl >= 2) speed = speed.times(tmp.bat[2].eff[8]);
+    if (hasAnhUpg(42)) speed = speed.times(3);
     return speed;
 }
 
 function getDuplicators() {
-    const amt = Decimal.pow(tmp.dup.base, player.dup.time);
+    let amt = Decimal.pow(tmp.dup.base, player.dup.time);
     if (amt.gte(tmp.dup.haltStart)) {
         amt = Decimal.pow(tmp.dup.base, player.dup.time.times(tmp.dup.haltStart.log(tmp.dup.base)).sqrt())
     }
