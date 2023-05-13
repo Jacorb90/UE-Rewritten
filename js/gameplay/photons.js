@@ -323,13 +323,27 @@ function buyWaveAcc(x) {
 function distributeWaveAccs() {
     if (!player.photons.unl) return;
     if (!hasAQUpg(43)) return;
-    if (player.photons.ultra.lt(3)) return;
-    
-    const n = player.photons.ultra.div(3).floor();
 
-    player.photons.ultra = player.photons.ultra.sub(n.times(3));
-    for (let x=1;x<=3;x++) {
-        player.photons.uwi[x] = player.photons.uwi[x].plus(n);
+    if (player.photons.ultra.gte(3)) {
+        const n = player.photons.ultra.div(3).floor();
+
+        player.photons.ultra = player.photons.ultra.sub(n.times(3));
+        for (let x=1;x<=3;x++) {
+            player.photons.uwi[x] = player.photons.uwi[x].plus(n);
+        }
+    }
+
+    let i=0;
+    while (player.photons.ultra.gte(1) && i<2) {
+        if (player.photons.uwi[3].lte(player.photons.uwi[2]) && player.photons.uwi[3].lte(player.photons.uwi[1])){
+            player.photons.uwi[3] = player.photons.uwi[3].plus(1);
+        } else if (player.photons.uwi[2].lte(player.photons.uwi[1])) {
+            player.photons.uwi[2] = player.photons.uwi[2].plus(1);
+        } else {
+            player.photons.uwi[1] = player.photons.uwi[1].plus(1);
+        }
+        player.photons.ultra = player.photons.ultra.sub(1);
+        i++;
     }
 }
 
